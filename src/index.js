@@ -349,12 +349,18 @@ export default class Carousel extends React.Component {
           !this.props.wrapAround
         ) {
           this.setState({ easing: easing[this.props.edgeEasing] });
+          if (this.props.invalidChange) {
+            this.props.invalidChange(this.state.currentSlide, true);
+          }
         } else {
           this.nextSlide();
         }
       } else if (this.touchObject.direction === -1) {
         if (this.state.currentSlide <= 0 && !this.props.wrapAround) {
           this.setState({ easing: easing[this.props.edgeEasing] });
+          if (this.props.invalidChange) {
+            this.props.invalidChange(this.state.currentSlide, false);
+          }
         } else {
           this.previousSlide();
         }
@@ -374,7 +380,7 @@ export default class Carousel extends React.Component {
     const xDist = x1 - x2;
     const yDist = y1 - y2;
     const r = Math.atan2(yDist, xDist);
-    let swipeAngle = Math.round(r * 180 / Math.PI);
+    let swipeAngle = Math.round((r * 180) / Math.PI);
 
     if (swipeAngle < 0) {
       swipeAngle = 360 - Math.abs(swipeAngle);
@@ -507,19 +513,28 @@ export default class Carousel extends React.Component {
       }
     }
 
-    this.props.beforeSlide(this.state.currentSlide, index);
+    const isLastNext = index >= React.Children.count(this.props.children);
+    const isLastPrev = index < 0;
 
-    if (index !== this.state.currentSlide) {
-      this.props.afterSlide(index);
-    }
-    this.setState(
-      {
-        currentSlide: index
-      },
-      () => {
-        this.resetAutoplay();
+    if (isLastPrev || isLastNext) {
+      if (this.props.invalidChange) {
+        this.props.invalidChange(index, isLastNext);
       }
-    );
+    } else {
+      this.props.beforeSlide(this.state.currentSlide, index);
+
+      if (index !== this.state.currentSlide) {
+        this.props.afterSlide(index);
+      }
+      this.setState(
+        {
+          currentSlide: index
+        },
+        () => {
+          this.resetAutoplay();
+        }
+      );
+    }
   }
 
   nextSlide() {
@@ -533,7 +548,9 @@ export default class Carousel extends React.Component {
       !this.props.wrapAround &&
       this.props.cellAlign === 'left'
     ) {
-      return;
+      if (this.props.invalidChange) {
+        this.props.invalidChange(this.state.currentSlide, true);
+      }
     }
 
     if (this.props.wrapAround) {
@@ -554,7 +571,9 @@ export default class Carousel extends React.Component {
 
   previousSlide() {
     if (this.state.currentSlide <= 0 && !this.props.wrapAround) {
-      return;
+      if (this.props.invalidChange) {
+        this.props.invalidChange(this.state.currentSlide, false);
+      }
     }
 
     if (this.props.wrapAround) {
@@ -730,9 +749,9 @@ export default class Carousel extends React.Component {
     if (typeof props.slideWidth !== 'number') {
       slideWidth = parseInt(props.slideWidth);
     } else if (props.vertical) {
-      slideWidth = slideHeight / props.slidesToShow * props.slideWidth;
+      slideWidth = (slideHeight / props.slidesToShow) * props.slideWidth;
     } else {
-      slideWidth = frame.offsetWidth / props.slidesToShow * props.slideWidth;
+      slideWidth = (frame.offsetWidth / props.slidesToShow) * props.slideWidth;
     }
 
     if (!props.vertical) {
@@ -793,8 +812,8 @@ export default class Carousel extends React.Component {
       position: 'relative',
       display: 'block',
       margin: this.props.vertical
-        ? `${this.props.cellSpacing / 2 * -1}px 0px`
-        : `0px ${this.props.cellSpacing / 2 * -1}px`,
+        ? `${(this.props.cellSpacing / 2) * -1}px 0px`
+        : `0px ${(this.props.cellSpacing / 2) * -1}px`,
       padding: 0,
       height: this.props.vertical
         ? listWidth + spacingOffset
@@ -1101,6 +1120,7 @@ Carousel.propTypes = {
   cellSpacing: PropTypes.number,
   dragging: PropTypes.bool,
   easing: PropTypes.string,
+  invalidChange: PropTypes.func,
   edgeEasing: PropTypes.string,
   frameOverflow: PropTypes.string,
   framePadding: PropTypes.string,
