@@ -545,8 +545,7 @@ export default class Carousel extends React.Component {
     }
     if (
       this.state.currentSlide >= childrenCount - slidesToShow &&
-      !this.props.wrapAround &&
-      this.props.cellAlign === 'left'
+      !this.props.wrapAround
     ) {
       if (this.props.invalidChange) {
         this.props.invalidChange(this.state.currentSlide, true);

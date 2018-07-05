@@ -572,7 +572,7 @@ function (_React$Component) {
         slidesToShow = this.state.slidesToScroll;
       }
 
-      if (this.state.currentSlide >= childrenCount - slidesToShow && !this.props.wrapAround && this.props.cellAlign === 'left') {
+      if (this.state.currentSlide >= childrenCount - slidesToShow && !this.props.wrapAround) {
         if (this.props.invalidChange) {
           this.props.invalidChange(this.state.currentSlide, true);
         }
